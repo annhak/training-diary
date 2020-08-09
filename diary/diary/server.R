@@ -12,32 +12,31 @@ library(data.table)
 library(DT)
 
 # Define server logic required to draw a histogram
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
     
-    print(getwd())
     dimensionFile <- "./dimensions.csv"
     workoutFile <- "./workout.csv"
     
-    # dimensions <<- tryCatch(
-    #     read.csv(dimensionFile),
-    #     error = function(e) {
-    #         data.frame(
-    #             excercise_name = character(), 
-    #             group = character(), 
-    #             stringsAsFactors = FALSE)
-    #     }
-    # )
-    # print(dimensions)
+    dimensions <- reactiveValues(
+        dim = tryCatch(
+        read.csv(dimensionFile, header = TRUE),
+        error = function(e) {
+            data.frame(
+                exercise_name = character(),
+                group = character(),
+                stringsAsFactors = FALSE)
+        })
+    )
     
-    dimensions <- read.csv(dimensionFile, header = TRUE, sep = ",")
-    print(dimensions)
-    
+
+#    dimensions <- read.csv(dimensionFile, header = TRUE, sep = ",")
+
     workouts <<- tryCatch(
         read.csv(workoutFile),
         error = function(e) {
             data.frame(
                 datetime = character(),
-                excercise_name = character(),
+                exercise_name = character(),
                 streaks = numeric(),
                 repetitions = numeric(),
                 weight = numeric(),
@@ -47,8 +46,10 @@ shinyServer(function(input, output) {
     )
     
     output$dimensionTable <- DT::renderDataTable({
-        saveData()
-        return(dimensions)
+#        saveData()
+        group <- group()
+#        print(dimensions)
+        return(dimensions$dim)
     }, selection = 'none',server = TRUE, escape = FALSE, options = list(
         paging = TRUE,
         preDrawCallback = JS('function() {Shiny.unbindAll(this.api().table().node()); }'),
@@ -56,21 +57,55 @@ shinyServer(function(input, output) {
         )
     )
     
+    add_to_dims <- reactive({
+        dim1 <- dimensions$dim
+        increment <- data.frame(
+            exercise_name = input$exercise_name,
+            group = names(which(group_options == input$group))
+        )
+        dim_new <- rbind(dim1, increment)
+    })
+    
+    observeEvent(input$save, {
+        dimensions$dim <- add_to_dims()
+        updateRadioButtons(
+            session, 
+            "group", 
+            "Select the input mode", 
+            group_options,
+            selected = character(0))
+        updateTextInput(
+            session, 
+            "exercise_name", 
+            label = "Give the exercise type to be saved",
+            value = "   ")
+        saveData()
+    })
+    
+    group <- reactive({
+#        print(input$group)
+        input$group
+    })
+    
     saveData <- function() {
-        # Remove old entries from current break, bind the old and new entries and overwrite the original file with new table
-        write.csv(dimensions, dimensionFile, row.names = FALSE)
+        write.csv(dimensions$dim, dimensionFile, row.names = FALSE)
     }
         
-
+    myValues <- reactiveValues(
+        # exercise_name = dimensions$exercise_name,
+        # group = dimensions$group)
+        a=1)
+    observeEvent(input$save, {
+        myValues$exercise_name = c(myValues$exercise_name, input$exercise_name)
+        myValues$group = c(myValues$group, input$group)
+        # myValues <- rbind(myValues,
+        #                   data.frame(
+        #                       exercise_name = input$exercise_name,
+        #                       group = input$group))
+        
+    })
+    
     output$distPlot <- renderPlot({
-
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
-
     })
 
 })

@@ -15,23 +15,28 @@ shinyUI(fluidPage(
     # Application title
     titlePanel("Old Faithful Geyser Data"),
 
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            tabsetPanel(
-                tabPanel("Exercise", dataTableOutput("dimensionTable")),
-                tabPanel("Add workout"),
-                tabPanel("Reports", plotOutput("distPlot"))
-            )
-        )
+    # Show a plot of the generated distribution
+    tabsetPanel(
+        tabPanel(
+            "Exercise",     
+            sidebarLayout(
+                sidebarPanel(
+                    textInput(
+                        "exercise_name", 
+                        "Give the exercise type to be saved"),
+                    radioButtons(
+                        "group", 
+                        "Select the input mode", 
+                        group_options,
+                        selected = character(0)),
+                    actionButton("save", "Save the new exercise type")
+                    ),
+                mainPanel(
+                    dataTableOutput("dimensionTable")
+                    )
+                )
+            ),
+        tabPanel("Add workout"),
+        tabPanel("Reports", plotOutput("distPlot"))
     )
 ))

@@ -28,9 +28,6 @@ shinyServer(function(input, output, session) {
         })
     )
     
-
-#    dimensions <- read.csv(dimensionFile, header = TRUE, sep = ",")
-
     workouts <<- tryCatch(
         read.csv(workoutFile),
         error = function(e) {
@@ -46,9 +43,7 @@ shinyServer(function(input, output, session) {
     )
     
     output$dimensionTable <- DT::renderDataTable({
-#        saveData()
-        group <- group()
-#        print(dimensions)
+        exercise_names()
         return(dimensions$dim)
     }, selection = 'none',server = TRUE, escape = FALSE, options = list(
         paging = TRUE,
@@ -82,29 +77,57 @@ shinyServer(function(input, output, session) {
         saveData()
     })
     
-    group <- reactive({
-#        print(input$group)
-        input$group
+    exercise_names <- reactive({
+#        selected_group()
+        dimensions$dim$exercise_name
     })
+    
+    observeEvent(input$tabs, {
+        updateSelectInput(session, "new_exercise", choices = exercise_names())
+    })
+    
+    selected_group <- reactive({
+        name <- input$new_exercise
+        group <- dimensions$dim$group[dimensions$dim$exercise_name == name]
+        
+        print(length(group))
+
+        # if (identical(group, factor(0))) {
+        if (length(group) == 0) {
+            g <- -1
+        } else if (group == "Sets, reps, weights") {
+            g <- TRUE
+        } else if (group == "Duration, level") {
+            g <- FALSE
+        } else {
+            g <- -1
+        }
+        g
+    })
+    
+    output$group <- reactive({
+        selected_group()
+    })
+    outputOptions(output, "group", suspendWhenHidden = FALSE)
+#     group <- reactive({
+# #        print(input$group)
+#         input$group
+#     })
     
     saveData <- function() {
         write.csv(dimensions$dim, dimensionFile, row.names = FALSE)
     }
         
-    myValues <- reactiveValues(
-        # exercise_name = dimensions$exercise_name,
-        # group = dimensions$group)
-        a=1)
-    observeEvent(input$save, {
-        myValues$exercise_name = c(myValues$exercise_name, input$exercise_name)
-        myValues$group = c(myValues$group, input$group)
-        # myValues <- rbind(myValues,
-        #                   data.frame(
-        #                       exercise_name = input$exercise_name,
-        #                       group = input$group))
-        
-    })
-    
+    # myValues <- reactiveValues(
+    #     # exercise_name = dimensions$exercise_name,
+    #     # group = dimensions$group)
+    #     a=1)
+
+    # observeEvent(input$save, {
+    #     myValues$exercise_name = c(myValues$exercise_name, input$exercise_name)
+    #     myValues$group = c(myValues$group, input$group)
+    # })
+    # 
     output$distPlot <- renderPlot({
     })
 

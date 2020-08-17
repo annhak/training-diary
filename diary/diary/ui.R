@@ -16,7 +16,7 @@ shinyUI(fluidPage(
     titlePanel("Old Faithful Geyser Data"),
 
     # Show a plot of the generated distribution
-    tabsetPanel(
+    tabsetPanel(id = "tabs",
         tabPanel(
             "Exercise",     
             sidebarLayout(
@@ -36,7 +36,33 @@ shinyUI(fluidPage(
                     )
                 )
             ),
-        tabPanel("Add workout"),
+        tabPanel(
+            "Add workout", 
+            sidebarLayout(
+                sidebarPanel(
+                    dateInput(
+                        "date",
+                        label = "Date of the new training"
+                        ),
+                    selectInput(
+                        "new_exercise",
+                        label = "Select the exercise to be added",
+                        choices = NULL
+                    ),
+                    conditionalPanel(
+                        condition = "output.group",
+                        numericInput("sets", "How many sets were done", 0),
+                        numericInput("reps", "How many repetitions were done", 0),
+                        numericInput("weights", "What was the maximum weight", 0)),
+                    conditionalPanel(
+                        condition = "!output.group",
+                        numericInput("duration", "How long exercise was done", 0),
+                        numericInput("level", "What was the max level", 0))
+            ),
+
+                mainPanel()
+                )
+            ),
         tabPanel("Reports", plotOutput("distPlot"))
     )
 ))

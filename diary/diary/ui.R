@@ -13,7 +13,7 @@ library(shiny)
 shinyUI(fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Training diary"),
 
     # Show a plot of the generated distribution
     tabsetPanel(id = "tabs",
@@ -57,12 +57,13 @@ shinyUI(fluidPage(
                     conditionalPanel(
                         condition = "!output.group",
                         numericInput("duration", "How long exercise was done", 0),
-                        numericInput("level", "What was the max level", 0))
+                        numericInput("level", "What was the max level", 0)),
+                    actionButton("saveWorkout", "Save the new workout")
             ),
 
-                mainPanel()
+                mainPanel(dataTableOutput("factTable"))
                 )
             ),
-        tabPanel("Reports", plotOutput("distPlot"))
+        tabPanel("Reports")#, tableOutput("factTable"))
     )
 ))
